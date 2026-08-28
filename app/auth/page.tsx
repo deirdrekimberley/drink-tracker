@@ -18,7 +18,7 @@ export default function AuthPage() {
         password,
         options: {
           emailRedirectTo:
-            "http://localhost:3000/household",
+  `${window.location.origin}/household`,
         },
       });
 
