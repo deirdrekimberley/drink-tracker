@@ -341,9 +341,7 @@ if (favouriteError) {
       <div className="mx-auto max-w-md px-5 py-8">
         <header className="mb-8 flex items-start justify-between">
           <div>
-            <p className="text-sm font-medium text-gray-500">
-              Roommate Tracker
-            </p>
+          
 
             <h1 className="mt-1 text-3xl font-bold">
               Drink Tracker
