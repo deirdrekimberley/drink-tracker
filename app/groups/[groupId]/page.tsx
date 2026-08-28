@@ -26,6 +26,53 @@ type DrinkLog = {
   logged_at: string;
 };
 
+function getDateKey(date: Date) {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+
+  return `${year}-${month}-${day}`;
+}
+
+function calculateStreak(logs: DrinkLog[]) {
+  if (logs.length === 0) {
+    return 0;
+  }
+
+  const loggedDays = new Set(
+    logs.map((log) =>
+      getDateKey(new Date(log.logged_at))
+    )
+  );
+
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  const yesterday = new Date(today);
+  yesterday.setDate(yesterday.getDate() - 1);
+
+  let currentDay = new Date(today);
+
+  if (!loggedDays.has(getDateKey(today))) {
+    if (loggedDays.has(getDateKey(yesterday))) {
+      currentDay = yesterday;
+    } else {
+      return 0;
+    }
+  }
+
+  let streak = 0;
+
+  while (loggedDays.has(getDateKey(currentDay))) {
+    streak++;
+
+    currentDay = new Date(currentDay);
+    currentDay.setDate(currentDay.getDate() - 1);
+  }
+
+  return streak;
+}
+
 export default function GroupPage() {
   const params = useParams();
 
@@ -46,6 +93,9 @@ export default function GroupPage() {
 
   const [message, setMessage] =
     useState("");
+
+    const [sortBy, setSortBy] =
+  useState<"drinks" | "streak" | "alcohol">("drinks");
 
   useEffect(() => {
     loadGroup();
@@ -114,8 +164,6 @@ console.log("groupId:", groupId);
         (member) => member.user_id
       );
 
-    const start = new Date();
-    start.setHours(0, 0, 0, 0);
 
     let logRows: DrinkLog[] = [];
 
@@ -129,10 +177,6 @@ console.log("groupId:", groupId);
           "id, user_id, name, pure_alcohol_ml, logged_at"
         )
         .in("user_id", memberIds)
-        .gte(
-          "logged_at",
-          start.toISOString()
-        )
         .order("logged_at", {
           ascending: false,
         });
@@ -166,6 +210,37 @@ console.log("groupId:", groupId);
 
     setMessage("Invite code copied.");
   }
+
+  const leaderboard = members
+  .map((member) => {
+    const memberLogs = logs.filter(
+      (log) => log.user_id === member.user_id
+    );
+
+    const totalAlcohol = memberLogs.reduce(
+      (sum, log) =>
+        sum + Number(log.pure_alcohol_ml),
+      0
+    );
+
+    return {
+      ...member,
+      drinks: memberLogs.length,
+      streak: calculateStreak(memberLogs),
+      alcohol: totalAlcohol,
+    };
+  })
+  .sort((a, b) => {
+    if (sortBy === "drinks") {
+      return b.drinks - a.drinks;
+    }
+
+    if (sortBy === "streak") {
+      return b.streak - a.streak;
+    }
+
+    return b.alcohol - a.alcohol;
+  });
 
   return (
     <main className="min-h-screen bg-gray-100 px-5 py-8 pb-24 text-gray-900">
@@ -208,21 +283,111 @@ console.log("groupId:", groupId);
                   Copy
                 </button>
               </div>
-            </section>
+              </section>
 
-            <section>
-              <h2 className="mb-3 text-xl font-semibold">
-                Tonight
-              </h2>
+<section className="mb-8">
+  <div className="mb-3 flex items-center justify-between">
+    <h2 className="text-xl font-semibold">
+      Leaderboard
+    </h2>
+  </div>
+
+  <div className="mb-4 grid grid-cols-3 gap-2">
+    <button
+      onClick={() => setSortBy("drinks")}
+      className={`rounded-xl px-3 py-2 text-sm font-semibold ${
+        sortBy === "drinks"
+          ? "bg-gray-900 text-white"
+          : "bg-white text-gray-600"
+      }`}
+    >
+      Drinks
+    </button>
+
+    <button
+      onClick={() => setSortBy("streak")}
+      className={`rounded-xl px-3 py-2 text-sm font-semibold ${
+        sortBy === "streak"
+          ? "bg-gray-900 text-white"
+          : "bg-white text-gray-600"
+      }`}
+    >
+      Streak
+    </button>
+
+    <button
+      onClick={() => setSortBy("alcohol")}
+      className={`rounded-xl px-3 py-2 text-sm font-semibold ${
+        sortBy === "alcohol"
+          ? "bg-gray-900 text-white"
+          : "bg-white text-gray-600"
+      }`}
+    >
+      Alcohol
+    </button>
+  </div>
+
+  <div className="overflow-hidden rounded-3xl bg-white shadow-sm">
+    {leaderboard.map((member, index) => (
+      <Link
+        key={member.user_id}
+        href={`/groups/${groupId}/member/${member.user_id}`}
+        className={`flex items-center gap-3 p-4 ${
+          index < leaderboard.length - 1
+            ? "border-b border-gray-100"
+            : ""
+        }`}
+      >
+        <div className="w-7 text-lg font-bold text-gray-400">
+          {index + 1}
+        </div>
+
+        <div className="min-w-0 flex-1">
+          <p className="font-semibold">
+            {member.display_name}
+          </p>
+
+          <div className="mt-1 flex gap-3 text-xs text-gray-500">
+            <span>
+              {member.drinks} drinks
+            </span>
+
+            <span>
+              {member.streak} day streak
+            </span>
+
+            <span>
+              {member.alcohol.toFixed(1)} mL
+            </span>
+          </div>
+        </div>
+
+        <span className="text-gray-300">
+          ›
+        </span>
+      </Link>
+    ))}
+  </div>
+</section>
+
+<section>
+  <h2 className="mb-3 text-xl font-semibold">
+    Tonight
+  </h2>
 
               <div className="space-y-3">
                 {members.map((member) => {
-                  const memberLogs =
-                    logs.filter(
-                      (log) =>
-                        log.user_id ===
-                        member.user_id
+                  const memberLogs = logs.filter((log) => {
+                    const logDate = new Date(log.logged_at);
+                    const today = new Date();
+                  
+                    return (
+                      log.user_id === member.user_id &&
+                      logDate.getFullYear() === today.getFullYear() &&
+                      logDate.getMonth() === today.getMonth() &&
+                      logDate.getDate() === today.getDate()
                     );
+                  });
 
                   const totalAlcohol =
                     memberLogs.reduce(
