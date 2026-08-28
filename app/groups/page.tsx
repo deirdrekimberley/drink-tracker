@@ -334,7 +334,7 @@ const [inviteCode, setInviteCode] =
 
         <div className="mt-6 grid grid-cols-2 gap-3">
   <button
-    className="rounded-2xl bg-gray-900 px-4 py-3 font-semibold text-white"
+    className="rounded-2xl bg-gray-900 px-4 py-3 font-semibold text-white transition active:scale-[0.98] active:bg-gray-700"
     onClick={() => {
       setShowCreateForm(
         !showCreateForm
@@ -347,7 +347,7 @@ const [inviteCode, setInviteCode] =
   </button>
 
   <button
-    className="rounded-2xl border border-gray-300 bg-white px-4 py-3 font-semibold text-gray-700"
+    className="rounded-2xl border border-gray-300 bg-white px-4 py-3 font-semibold text-gray-700 transition active:scale-[0.98] active:bg-gray-700"
     onClick={() => {
       setShowJoinForm(
         !showJoinForm
@@ -421,7 +421,7 @@ const [inviteCode, setInviteCode] =
 
     <button
       onClick={joinGroup}
-      className="w-full rounded-xl bg-gray-900 px-4 py-3 font-semibold text-white"
+      className="w-full rounded-xl bg-gray-900 px-4 py-3 font-semibold text-white transition active:scale-[0.98] active:bg-gray-50"
     >
       Join
     </button>

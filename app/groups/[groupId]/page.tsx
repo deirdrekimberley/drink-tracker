@@ -278,7 +278,7 @@ console.log("groupId:", groupId);
 
                 <button
                   onClick={copyInviteCode}
-                  className="rounded-xl border border-gray-300 px-3 py-2 text-sm font-semibold"
+                  className="rounded-xl border border-gray-300 px-3 py-2 text-sm font-semibold transition active:scale-[0.98] active:bg-gray-50"
                 >
                   Copy
                 </button>
