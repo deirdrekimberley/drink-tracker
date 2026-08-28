@@ -8,7 +8,7 @@ const links = [
   { name: "Scan", href: "/scan" },
   { name: "History", href: "/history" },
   { name: "Stats", href: "/stats" },
-  { name: "Household", href: "/household" },
+  { name: "Groups", href: "/groups" },
 ];
 
 export default function BottomNav() {

@@ -18,7 +18,7 @@ export default function AuthPage() {
         password,
         options: {
           emailRedirectTo:
-  `${window.location.origin}/household`,
+  `${window.location.origin}/groups`,
         },
       });
 
