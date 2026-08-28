@@ -122,35 +122,93 @@ return () => {
     setSearching(true);
     setDrink(null);
     setMessage("");
-
+    setShowCustomForm(false);
+  
     const { data, error } = await supabase
       .from("drinks")
       .select("*")
       .eq("barcode", code)
       .maybeSingle();
-
+  
     if (error) {
       console.error(
-        "Could not search barcode:",
+        "Could not search local barcode:",
         error.message
       );
-
-      setMessage("Could not search for this barcode.");
+  
+      setMessage(
+        "Could not search for this barcode."
+      );
+  
       setSearching(false);
       return;
     }
-
-    if (!data) {
-        setMessage(
-          "Barcode scanned, but this product is not in our catalog yet."
-        );
-      
+  
+    if (data) {
+      setDrink(data as Drink);
+      setSearching(false);
+      return;
+    }
+  
+    try {
+      const response = await fetch(
+        `/api/barcode/${encodeURIComponent(code)}`
+      );
+  
+      const external = await response.json();
+  
+      if (
+        external.found &&
+        external.product
+      ) {
+        const product = external.product;
+  
+        setCustomName(product.name || "");
+        setCustomBrand(product.brand || "");
+  
+        if (product.volumeMl) {
+          setCustomVolume(
+            String(product.volumeMl)
+          );
+        }
+  
+        if (product.abv) {
+          setCustomAbv(
+            String(product.abv)
+          );
+        }
+  
         setShowCustomForm(true);
+  
+        if (
+          product.name &&
+          product.volumeMl &&
+          product.abv
+        ) {
+          setMessage(
+            "Product found online. Check the details below, then save and log it."
+          );
+        } else {
+          setMessage(
+            "Product found online, but some drink details are missing. Fill in the remaining fields below."
+          );
+        }
+  
         setSearching(false);
         return;
       }
-
-    setDrink(data as Drink);
+    } catch (error) {
+      console.error(
+        "External barcode lookup failed:",
+        error
+      );
+    }
+  
+    setMessage(
+      "Barcode scanned, but this product was not found online. Enter the details below."
+    );
+  
+    setShowCustomForm(true);
     setSearching(false);
   }
 
