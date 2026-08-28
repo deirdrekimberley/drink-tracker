@@ -357,7 +357,7 @@ if (favouriteError) {
 
           <button
             onClick={logOut}
-            className="text-sm text-gray-500"
+            className="text-sm text-gray-500 transition active:scale-95"
           >
             Log out
           </button>
