@@ -21,6 +21,8 @@ export default function SearchPage() {
   const [search, setSearch] = useState("");
   const [loaded, setLoaded] = useState(false);
   const [message, setMessage] = useState("");
+  const [justLoggedId, setJustLoggedId] =
+  useState<number | null>(null);
   const [recentDrinks, setRecentDrinks] =
   useState<Drink[]>([]);
   const [showCustomForm, setShowCustomForm] =
@@ -170,8 +172,13 @@ const [customAbv, setCustomAbv] =
         updatedRecent.map((recent) => recent.id)
       )
     );
+    setJustLoggedId(drink.id);
+
+setTimeout(() => {
+  setJustLoggedId(null);
+}, 1000);
     setMessage(`${drink.name} logged.`);
-    setSearch("");
+ 
   }
 
   async function logCustomDrink() {
@@ -331,7 +338,7 @@ const [customAbv, setCustomAbv] =
         <button
           key={drink.id}
           onClick={() => logDrink(drink)}
-          className="flex w-full items-center justify-between rounded-2xl bg-white p-4 text-left shadow-sm"
+          className="flex w-full items-center justify-between rounded-2xl bg-white p-4 text-left shadow-sm transition active:scale-[0.98] active:bg-gray-50"
         >
           <div className="flex items-center gap-4">
             <div className="text-3xl">
@@ -352,8 +359,10 @@ const [customAbv, setCustomAbv] =
           </div>
 
           <span className="text-sm font-semibold">
-            + Log
-          </span>
+  {justLoggedId === drink.id
+    ? "✓ Logged"
+    : "+ Log"}
+</span>
         </button>
       ))
     )}
@@ -475,7 +484,7 @@ const [customAbv, setCustomAbv] =
               <button
                 key={drink.id}
                 onClick={() => logDrink(drink)}
-                className="flex w-full items-center justify-between rounded-2xl bg-white p-4 text-left shadow-sm"
+                className="flex w-full items-center justify-between rounded-2xl bg-white p-4 text-left shadow-sm transition active:scale-[0.98] active:bg-gray-50"
               >
                 <div className="flex items-center gap-4">
                   <div className="text-3xl">
@@ -500,8 +509,10 @@ const [customAbv, setCustomAbv] =
                 </div>
 
                 <span className="text-sm font-semibold">
-                  + Log
-                </span>
+  {justLoggedId === drink.id
+    ? "✓ Logged"
+    : "+ Log"}
+</span>
               </button>
             ))
           ))}
