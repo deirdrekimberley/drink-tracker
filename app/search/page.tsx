@@ -14,6 +14,15 @@ type Drink = {
   abv: number;
 };
 
+type ExternalDrink = {
+  barcode: string;
+  name: string;
+  brand: string;
+  quantity: string;
+  volumeMl: number | null;
+  abv: number | null;
+};
+
 export default function SearchPage() {
   const [drinks, setDrinks] = useState<Drink[]>([]);
   const [search, setSearch] = useState("");
@@ -23,6 +32,17 @@ export default function SearchPage() {
   useState(false);
   const [saveAsFavourite, setSaveAsFavourite] = useState(false);
 const [customName, setCustomName] =
+  useState("");
+  const [externalDrinks, setExternalDrinks] =
+  useState<ExternalDrink[]>([]);
+
+const [searchingOnline, setSearchingOnline] =
+  useState(false);
+
+const [externalSearched, setExternalSearched] =
+  useState(false);
+
+const [customBrand, setCustomBrand] =
   useState("");
 
 const [customVolume, setCustomVolume] =
@@ -83,6 +103,75 @@ const [customAbv, setCustomAbv] =
       return searchableText.includes(query);
     });
   }, [drinks, search]);
+
+  async function searchOnline() {
+    const query = search.trim();
+  
+    if (!query) {
+      return;
+    }
+  
+    setSearchingOnline(true);
+    setExternalSearched(false);
+    setExternalDrinks([]);
+    setMessage("");
+  
+    try {
+      const response = await fetch(
+        `/api/search-drinks?q=${encodeURIComponent(query)}`
+      );
+  
+      const data = await response.json();
+  
+      setExternalDrinks(
+        Array.isArray(data.results)
+          ? data.results
+          : []
+      );
+  
+      setExternalSearched(true);
+    } catch (error) {
+      console.error(
+        "Could not search online:",
+        error
+      );
+  
+      setMessage(
+        "Could not search the online drink database."
+      );
+  
+      setExternalSearched(true);
+    }
+  
+    setSearchingOnline(false);
+  }
+
+  function selectExternalDrink(
+    drink: ExternalDrink
+  ) {
+    setCustomName(drink.name || "");
+    setCustomBrand(drink.brand || "");
+  
+    setCustomVolume(
+      drink.volumeMl
+        ? String(drink.volumeMl)
+        : ""
+    );
+  
+    setCustomAbv(
+      drink.abv && drink.abv > 0
+        ? String(drink.abv)
+        : ""
+    );
+  
+    setShowCustomForm(true);
+    setMessage("");
+  
+    window.scrollTo({
+      top: document.body.scrollHeight,
+      behavior: "smooth",
+    });
+  }
 
   async function logDrink(drink: Drink) {
 
@@ -263,6 +352,36 @@ const [customAbv, setCustomAbv] =
           />
         </div>
 
+        <div className="mb-6">
+  <input
+    type="text"
+    value={search}
+    onChange={(e) =>
+      setSearch(e.target.value)
+    }
+    placeholder="Search White Claw, Corona, tequila..."
+    className="w-full rounded-2xl border border-gray-300 bg-white px-4 py-4 outline-none focus:border-gray-500"
+  />
+</div>
+
+{search.trim() && (
+  <button
+    onClick={searchOnline}
+    disabled={searchingOnline}
+    className="mb-6 w-full rounded-xl border border-gray-300 bg-white px-4 py-3 font-semibold disabled:opacity-50"
+  >
+    {searchingOnline
+      ? "Searching online..."
+      : "Search online"}
+  </button>
+)}
+
+{message && (
+  <div className="mb-5 rounded-2xl bg-white p-4 text-sm font-medium shadow-sm">
+    {message}
+  </div>
+)}
+
         {message && (
           <div className="mb-5 rounded-2xl bg-white p-4 text-sm font-medium shadow-sm">
             {message}
@@ -301,24 +420,33 @@ const [customAbv, setCustomAbv] =
                </h3>
          
                <div className="mt-5 space-y-4">
-                 <input
-                   value={customName}
-                   onChange={(e) =>
-                     setCustomName(e.target.value)
-                   }
-                   placeholder="Drink name"
-                   className="w-full rounded-xl border border-gray-300 px-4 py-3"
-                 />
-         
-                 <input
-                   type="number"
-                   value={customVolume}
-                   onChange={(e) =>
-                     setCustomVolume(e.target.value)
-                   }
-                   placeholder="Volume (mL)"
-                   className="w-full rounded-xl border border-gray-300 px-4 py-3"
-                 />
+               <input
+  value={customName}
+  onChange={(e) =>
+    setCustomName(e.target.value)
+  }
+  placeholder="Drink name"
+  className="w-full rounded-xl border border-gray-300 px-4 py-3"
+/>
+
+<input
+  value={customBrand}
+  onChange={(e) =>
+    setCustomBrand(e.target.value)
+  }
+  placeholder="Brand (optional)"
+  className="w-full rounded-xl border border-gray-300 px-4 py-3"
+/>
+
+<input
+  type="number"
+  value={customVolume}
+  onChange={(e) =>
+    setCustomVolume(e.target.value)
+  }
+  placeholder="Volume (mL)"
+  className="w-full rounded-xl border border-gray-300 px-4 py-3"
+/>
          
          <input
   type="number"
@@ -407,6 +535,73 @@ const [customAbv, setCustomAbv] =
             ))
           )}
         </section>
+
+        {externalSearched && (
+  <section className="mt-8">
+    <div className="mb-3 flex items-center justify-between">
+      <h2 className="text-lg font-semibold">
+        Online results
+      </h2>
+
+      <span className="text-sm text-gray-500">
+        {externalDrinks.length} found
+      </span>
+    </div>
+
+    {externalDrinks.length === 0 ? (
+      <div className="rounded-2xl bg-white p-5 text-sm text-gray-500 shadow-sm">
+        No online results found.
+      </div>
+    ) : (
+      <div className="space-y-3">
+        {externalDrinks.map(
+          (drink, index) => (
+            <button
+              key={`${drink.barcode}-${index}`}
+              onClick={() =>
+                selectExternalDrink(drink)
+              }
+              className="w-full rounded-2xl bg-white p-4 text-left shadow-sm"
+            >
+              <div className="flex items-start justify-between gap-4">
+                <div>
+                  <p className="font-semibold">
+                    {drink.name ||
+                      "Unknown drink"}
+                  </p>
+
+                  {drink.brand && (
+                    <p className="mt-1 text-sm text-gray-500">
+                      {drink.brand}
+                    </p>
+                  )}
+
+                  <p className="mt-2 text-sm text-gray-500">
+                    {drink.volumeMl
+                      ? `${drink.volumeMl} mL`
+                      : "Volume unknown"}
+
+                    {" · "}
+
+                    {drink.abv &&
+                    drink.abv > 0
+                      ? `${drink.abv}% ABV`
+                      : "ABV unknown"}
+                  </p>
+                </div>
+
+                <span className="shrink-0 text-sm font-semibold">
+                  Select
+                </span>
+              </div>
+            </button>
+          )
+        )}
+      </div>
+    )}
+  </section>
+)}
+
       </div>
 
       <BottomNav />
