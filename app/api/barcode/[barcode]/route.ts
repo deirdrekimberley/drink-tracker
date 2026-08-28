@@ -50,11 +50,64 @@ export async function GET(
         ? product.nutriments.alcohol_100g
         : null;
 
-    const volumeMl =
-      product.product_quantity_unit === "ml" &&
-      typeof product.product_quantity === "number"
-        ? product.product_quantity
-        : null;
+        let volumeMl: number | null = null;
+
+        if (
+          typeof product.product_quantity === "number" &&
+          product.product_quantity_unit
+        ) {
+          const unit = String(
+            product.product_quantity_unit
+          ).toLowerCase();
+        
+          if (unit === "ml") {
+            volumeMl = product.product_quantity;
+          }
+        
+          if (unit === "cl") {
+            volumeMl =
+              product.product_quantity * 10;
+          }
+        
+          if (unit === "l") {
+            volumeMl =
+              product.product_quantity * 1000;
+          }
+        }
+        
+        if (!volumeMl && product.quantity) {
+          const quantity =
+            String(product.quantity).toLowerCase();
+        
+          const mlMatch = quantity.match(
+            /([\d.]+)\s*ml/
+          );
+        
+          const clMatch = quantity.match(
+            /([\d.]+)\s*cl/
+          );
+        
+          const lMatch = quantity.match(
+            /([\d.]+)\s*l\b/
+          );
+        
+          const ozMatch = quantity.match(
+            /([\d.]+)\s*(?:fl\s*)?oz/
+          );
+        
+          if (mlMatch) {
+            volumeMl = Number(mlMatch[1]);
+          } else if (clMatch) {
+            volumeMl =
+              Number(clMatch[1]) * 10;
+          } else if (lMatch) {
+            volumeMl =
+              Number(lMatch[1]) * 1000;
+          } else if (ozMatch) {
+            volumeMl =
+              Number(ozMatch[1]) * 29.5735;
+          }
+        }
 
     return NextResponse.json({
       found: true,

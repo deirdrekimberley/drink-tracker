@@ -151,58 +151,74 @@ return () => {
     }
   
     try {
-      const response = await fetch(
-        `/api/barcode/${encodeURIComponent(code)}`
-      );
-  
-      const external = await response.json();
-  
-      if (
-        external.found &&
-        external.product
-      ) {
-        const product = external.product;
-  
-        setCustomName(product.name || "");
-        setCustomBrand(product.brand || "");
-  
-        if (product.volumeMl) {
+        const response = await fetch(
+          `/api/barcode/${encodeURIComponent(code)}`
+        );
+      
+        const external = await response.json();
+      
+        if (external.found && external.product) {
+          const product = external.product;
+      
+          console.log("External product found:", product);
+      
+          setCustomName(
+            product.name ? String(product.name) : ""
+          );
+      
+          setCustomBrand(
+            product.brand ? String(product.brand) : ""
+          );
+      
           setCustomVolume(
-            String(product.volumeMl)
+            product.volumeMl
+              ? String(product.volumeMl)
+              : ""
           );
-        }
-  
-        if (product.abv) {
+      
           setCustomAbv(
-            String(product.abv)
+            product.abv && Number(product.abv) > 0
+              ? String(product.abv)
+              : ""
           );
+      
+          setShowCustomForm(true);
+      
+          const missingFields = [];
+      
+          if (!product.name) {
+            missingFields.push("name");
+          }
+      
+          if (!product.volumeMl) {
+            missingFields.push("volume");
+          }
+      
+          if (!product.abv || Number(product.abv) <= 0) {
+            missingFields.push("ABV");
+          }
+      
+          if (missingFields.length === 0) {
+            setMessage(
+              "Product found online. Check the details below, then save and log it."
+            );
+          } else {
+            setMessage(
+              `Product found online. Fill in the missing ${missingFields.join(
+                ", "
+              )}.`
+            );
+          }
+      
+          setSearching(false);
+          return;
         }
-  
-        setShowCustomForm(true);
-  
-        if (
-          product.name &&
-          product.volumeMl &&
-          product.abv
-        ) {
-          setMessage(
-            "Product found online. Check the details below, then save and log it."
-          );
-        } else {
-          setMessage(
-            "Product found online, but some drink details are missing. Fill in the remaining fields below."
-          );
-        }
-  
-        setSearching(false);
-        return;
+      } catch (error) {
+        console.error(
+          "External barcode lookup failed:",
+          error
+        );
       }
-    } catch (error) {
-      console.error(
-        "External barcode lookup failed:",
-        error
-      );
-    }
   
     setMessage(
       "Barcode scanned, but this product was not found online. Enter the details below."
