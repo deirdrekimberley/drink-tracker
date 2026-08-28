@@ -12,25 +12,19 @@ export default function AuthPage() {
   async function signUp() {
     setLoading(true);
     setMessage("");
-
+  
     const { error } = await supabase.auth.signUp({
-        email,
-        password,
-        options: {
-          emailRedirectTo:
-  `${window.location.origin}/groups`,
-        },
-      });
-
+      email,
+      password,
+    });
+  
     if (error) {
       setMessage(error.message);
-    } else {
-      setMessage(
-        "Sign-up submitted. Check your email if confirmation is enabled."
-      );
+      setLoading(false);
+      return;
     }
-
-    setLoading(false);
+  
+    window.location.href = "/groups";
   }
 
   async function signIn() {
