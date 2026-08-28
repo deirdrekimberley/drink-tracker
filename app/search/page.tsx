@@ -340,17 +340,7 @@ const [customAbv, setCustomAbv] =
           </p>
         </header>
 
-        <div className="mb-6">
-          <input
-            type="text"
-            value={search}
-            onChange={(e) =>
-              setSearch(e.target.value)
-            }
-            placeholder="Search White Claw, Corona, tequila..."
-            className="w-full rounded-2xl border border-gray-300 bg-white px-4 py-4 outline-none focus:border-gray-500"
-          />
-        </div>
+      
 
         <div className="mb-6">
   <input
@@ -382,11 +372,6 @@ const [customAbv, setCustomAbv] =
   </div>
 )}
 
-        {message && (
-          <div className="mb-5 rounded-2xl bg-white p-4 text-sm font-medium shadow-sm">
-            {message}
-          </div>
-        )}
 
         <section className="space-y-3">
           {filteredDrinks.length === 0 ? (
