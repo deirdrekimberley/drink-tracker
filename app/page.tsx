@@ -445,9 +445,9 @@ if (favouriteError) {
                   className="flex items-center justify-between rounded-2xl bg-white p-4 shadow-sm"
                 >
                   <button
-                    onClick={() => addDrink(drink)}
-                    className="flex flex-1 items-center gap-4 text-left"
-                  >
+  onClick={() => addDrink(drink)}
+  className="flex flex-1 items-center gap-4 rounded-xl text-left transition active:scale-[0.98] active:bg-gray-50"
+>
                     <div className="text-2xl">
                       {drink.emoji}
                     </div>
@@ -467,7 +467,7 @@ if (favouriteError) {
                     onClick={() =>
                       removeFavourite(drink)
                     }
-                    className="ml-4 text-xs text-gray-400"
+                    className="ml-4 rounded-lg px-2 py-2 text-xs text-gray-400 transition active:scale-95 active:bg-gray-100"
                   >
                     Remove
                   </button>
@@ -488,7 +488,7 @@ if (favouriteError) {
                 onClick={() =>
                   setShowCustomForm(false)
                 }
-                className="text-sm text-gray-400"
+                className="text-sm text-gray-400 transition active:scale-95"
               >
                 Cancel
               </button>
