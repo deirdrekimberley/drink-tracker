@@ -338,9 +338,15 @@ console.log("groupId:", groupId);
             : ""
         }`}
       >
-        <div className="w-7 text-lg font-bold text-gray-400">
-          {index + 1}
-        </div>
+        <div className="w-8 text-center text-xl">
+  {index === 0
+    ? "🥇"
+    : index === 1
+    ? "🥈"
+    : index === 2
+    ? "🥉"
+    : index + 1}
+</div>
 
         <div className="min-w-0 flex-1">
           <p className="font-semibold">
