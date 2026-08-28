@@ -2,9 +2,9 @@
 
 import { useEffect, useRef, useState } from "react";
 import {
-  Html5QrcodeScanner,
-  Html5QrcodeSupportedFormats,
-} from "html5-qrcode";
+    Html5Qrcode,
+    Html5QrcodeSupportedFormats,
+  } from "html5-qrcode";
 
 import { supabase } from "@/lib/supabase";
 import BottomNav from "@/components/BottomNav";
@@ -31,7 +31,7 @@ const [customBrand, setCustomBrand] = useState("");
 const [customVolume, setCustomVolume] = useState("");
 const [customAbv, setCustomAbv] = useState("");
 
-  const scannerRef = useRef<Html5QrcodeScanner | null>(null);
+const scannerRef = useRef<Html5Qrcode | null>(null);
   const scannedRef = useRef(false);
 
   useEffect(() => {
@@ -47,28 +47,34 @@ const [customAbv, setCustomAbv] = useState("");
 
     checkAuth();
 
-    const scanner = new Html5QrcodeScanner(
-      "barcode-reader",
-      {
-        fps: 10,
-        qrbox: {
-          width: 280,
-          height: 140,
-        },
+    const scanner = new Html5Qrcode("barcode-reader", {
         formatsToSupport: [
           Html5QrcodeSupportedFormats.UPC_A,
           Html5QrcodeSupportedFormats.UPC_E,
           Html5QrcodeSupportedFormats.EAN_13,
           Html5QrcodeSupportedFormats.EAN_8,
         ],
-        showTorchButtonIfSupported: true,
+        verbose: false,
+      });
+
+scannerRef.current = scanner;
+
+async function startScanner() {
+  try {
+    await scanner.start(
+        {
+            facingMode: {
+              exact: "environment",
+            },
+          },
+      {
+        fps: 10,
+        qrbox: {
+          width: 280,
+          height: 140,
+        },
+        
       },
-      false
-    );
-
-    scannerRef.current = scanner;
-
-    scanner.render(
       async (decodedText) => {
         if (scannedRef.current) {
           return;
@@ -79,27 +85,39 @@ const [customAbv, setCustomAbv] = useState("");
         setBarcode(decodedText);
 
         try {
-          await scanner.clear();
+          await scanner.stop();
         } catch {
-          // Scanner may already be stopping.
+          // Scanner may already be stopped.
         }
 
         await lookUpBarcode(decodedText);
       },
       () => {
-        // Ignore normal scan failures while camera is searching.
+        // Normal while searching for a barcode.
       }
     );
+  } catch (error) {
+    console.error(
+      "Could not start camera:",
+      error
+    );
 
-    return () => {
-      scanner
-        .clear()
-        .catch(() => {
-          // Ignore cleanup errors.
-        });
-    };
+    setMessage(
+      "Could not open the camera. Make sure camera permission is allowed."
+    );
+  }
+}
+
+startScanner();
+
+return () => {
+    if (scanner.isScanning) {
+      void scanner.stop().catch(() => {
+        // Ignore cleanup errors.
+      });
+    }
+  };
   }, []);
-
   async function lookUpBarcode(code: string) {
     setSearching(true);
     setDrink(null);
