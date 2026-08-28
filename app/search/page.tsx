@@ -21,6 +21,8 @@ export default function SearchPage() {
   const [search, setSearch] = useState("");
   const [loaded, setLoaded] = useState(false);
   const [message, setMessage] = useState("");
+  const [recentDrinks, setRecentDrinks] =
+  useState<Drink[]>([]);
   const [showCustomForm, setShowCustomForm] =
   useState(false);
   const [saveAsFavourite, setSaveAsFavourite] = useState(false);
@@ -64,6 +66,22 @@ const [customAbv, setCustomAbv] =
       }
 
       setDrinks((data ?? []) as Drink[]);
+      const savedRecentIds = JSON.parse(
+        localStorage.getItem("recentDrinkIds") ?? "[]"
+      ) as number[];
+      
+      const recent = savedRecentIds
+        .map((id) =>
+          (data ?? []).find(
+            (drink) => drink.id === id
+          )
+        )
+        .filter(
+          (drink): drink is Drink =>
+            drink !== undefined
+        );
+      
+      setRecentDrinks(recent);
       setLoaded(true);
     }
 
@@ -74,7 +92,7 @@ const [customAbv, setCustomAbv] =
     const query = search.trim().toLowerCase();
 
     if (!query) {
-      return drinks;
+      return [];
     }
 
     return drinks.filter((drink) => {
@@ -137,7 +155,23 @@ const [customAbv, setCustomAbv] =
       return;
     }
 
+    const updatedRecent = [
+      drink,
+      ...recentDrinks.filter(
+        (recent) => recent.id !== drink.id
+      ),
+    ].slice(0, 5);
+    
+    setRecentDrinks(updatedRecent);
+    
+    localStorage.setItem(
+      "recentDrinkIds",
+      JSON.stringify(
+        updatedRecent.map((recent) => recent.id)
+      )
+    );
     setMessage(`${drink.name} logged.`);
+    setSearch("");
   }
 
   async function logCustomDrink() {
@@ -282,7 +316,51 @@ const [customAbv, setCustomAbv] =
 
 
         <section className="space-y-3">
-          {filteredDrinks.length === 0 ? (
+        {!search.trim() && (
+  <>
+    <h2 className="mb-3 text-lg font-semibold">
+      Recent
+    </h2>
+
+    {recentDrinks.length === 0 ? (
+      <div className="rounded-2xl bg-white p-5 text-sm text-gray-500 shadow-sm">
+        Your recently selected drinks will appear here.
+      </div>
+    ) : (
+      recentDrinks.map((drink) => (
+        <button
+          key={drink.id}
+          onClick={() => logDrink(drink)}
+          className="flex w-full items-center justify-between rounded-2xl bg-white p-4 text-left shadow-sm"
+        >
+          <div className="flex items-center gap-4">
+            <div className="text-3xl">
+              {drink.emoji}
+            </div>
+
+            <div>
+              <p className="font-semibold">
+                {drink.name}
+              </p>
+
+              <p className="mt-1 text-sm text-gray-500">
+                {Number(drink.default_volume_ml)} mL
+                {" · "}
+                {Number(drink.abv)}% ABV
+              </p>
+            </div>
+          </div>
+
+          <span className="text-sm font-semibold">
+            + Log
+          </span>
+        </button>
+      ))
+    )}
+  </>
+)}
+          {search.trim() &&
+  (filteredDrinks.length === 0 ? (
            <div className="rounded-2xl bg-white p-6 shadow-sm">
            {!showCustomForm ? (
              <>
@@ -426,7 +504,7 @@ const [customAbv, setCustomAbv] =
                 </span>
               </button>
             ))
-          )}
+          ))}
         </section>
 
       
