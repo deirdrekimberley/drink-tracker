@@ -1,8 +1,14 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import {
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import { supabase } from "@/lib/supabase";
 import BottomNav from "@/components/BottomNav";
+
 
 type Drink = {
   id?: number;
@@ -72,6 +78,7 @@ function convertDatabaseLog(log: DatabaseDrinkLog): DrinkLog {
 
 export default function Home() {
   const [logs, setLogs] = useState<DrinkLog[]>([]);
+  const customFormRef = useRef<HTMLElement>(null);
   const [favourites, setFavourites] = useState<Drink[]>([]);
   const [loaded, setLoaded] = useState(false);
 
@@ -402,11 +409,20 @@ if (favouriteError) {
             </h2>
 
             <button
-              onClick={() => setShowCustomForm(true)}
-              className="text-sm font-medium text-gray-600"
-            >
-              + Custom
-            </button>
+  onClick={() => {
+    setShowCustomForm(true);
+
+    setTimeout(() => {
+      customFormRef.current?.scrollIntoView({
+        behavior: "smooth",
+        block: "center",
+      });
+    }, 100);
+  }}
+  className="text-sm font-medium text-gray-600 transition active:scale-95"
+>
+  + Custom
+</button>
           </div>
 
           <div className="grid grid-cols-2 gap-3">
@@ -477,8 +493,11 @@ if (favouriteError) {
           </section>
         )}
 
-        {showCustomForm && (
-          <section className="mt-6 rounded-3xl bg-white p-5 shadow-sm">
+{showCustomForm && (
+  <section
+    ref={customFormRef}
+    className="mt-6 rounded-3xl bg-white p-5 shadow-sm"
+  >
             <div className="mb-4 flex items-center justify-between">
               <h2 className="text-lg font-semibold">
                 Add Custom Drink
